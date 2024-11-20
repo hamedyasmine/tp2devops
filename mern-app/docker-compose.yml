@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Service MongoDB
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    networks:
+      - mern-network
+    volumes:
+      - mongodb-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - "27017:27017"
+
+  # Service Server (Express)
+  server:
+    build:
+      context: ./server
+    container_name: server
+    networks:
+      - mern-network
+    ports:
+      - "9000:9000"
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_URI: mongodb://root:example@mongodb:27017/mern-db?authSource=admin
+    command: npm start
+
+  # Service Client (React)
+  client:
+    build:
+      context: ./client
+    container_name: client
+    networks:
+      - mern-network
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+    command: npm run start
+
+networks:
+  mern-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+    driver: local
